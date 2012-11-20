@@ -1,0 +1,141 @@
+#!/usr/bin/env perl
+use utf8;
+use Mojolicious::Lite;
+
+use Path::Class qw(file dir);
+use Encode;
+use Text::Markdown qw(markdown);
+
+get '/' => sub {
+  my ($self) = @_;
+  my $dir = dir($self->app->home->detect, 'assets');
+  my @assets;
+  for my $child ($dir->children) {
+    my $basename = $child->basename || '';
+    next unless $basename =~ /\.md\z/;
+    push @assets, $child;
+  }
+  $self->stash(
+    assets => \@assets,
+    transition => 'default',
+    theme => 'default',
+  );
+  $self->render(template => 'index/list');
+};
+
+get '/#filename' => sub {
+  my ($self) = @_;
+  my $file = file($self->app->home->detect, 'assets', $self->param('filename'));
+  return $self->render_not_found unless $file->stringify =~ /\.md\z/;
+  return $self->render_not_found unless -f $file;
+  my $conf_file = $file->stringify . '.conf';
+  my $conf = do $conf_file||{};
+  my $content   = decode_utf8($file->slurp);
+  my @slide     = $content =~ /(^#\s+.*?)(?:(?=^#\s+)|\z)/msg;
+  my @kids;
+  for my $slide (@slide) {
+    @kids   = $slide =~ /(^##?\s+.*?)(?:(?=^##?\s+)|\z)/msg;
+    $slide  = [map {markdown($_)} @kids];
+  }
+  $self->stash(
+    stash_slide => \@slide,
+    transition => $conf->{transition}//'default',
+    theme => $conf->{theme}//'beige',
+  );
+  return $self->render(template => 'index/single');
+};
+
+
+app->start;
+__DATA__
+
+@@ index/list.html.ep
+% layout 'default';
+<section>
+<h1>Assets List</h1>
+%= t ul => begin
+  % for my $file (@{$assets}) {
+    %= t li => begin
+      %= link_to $file->basename => url_for($file->basename);
+    % end
+  % }
+% end
+</section>
+
+@@ index/single.html.ep
+% layout 'default';
+% my $child = begin
+  % my ($markdown) = @_;
+  % my @option;
+  % while ($markdown =~ /<!\-{2,}\s*(\S+)\s*\-{2,}>/msg) {
+    % push @option, $1;
+  % }
+  % my $options = join ' ', @option;
+  % $options = qq{ $options} if $options ne '';
+<section<%== $options %>>
+%== $markdown
+</section>
+% end
+% for my $sec (@{$stash_slide}) {
+<section>
+  % if (ref $sec eq 'ARRAY') {
+    % for my $part (@{$sec}) {
+      %== $child->($part);
+    % }
+  % } else {
+    %== $child->($sec);
+  % }
+</section>
+% }
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="<%= app->renderer->encoding %>" />
+  <title><%= title %></title>
+  %= stylesheet '/reveal/css/reveal.min.css'
+  %= stylesheet '/reveal/css/theme/'.$theme.'.css'
+  %= stylesheet '/reveal/lib/css/zenburn.css'
+  %= stylesheet '/gcp/prettify.css'
+  %= stylesheet '/app/app.css'
+</head>
+<body>
+<div id="md2reveal" class="reveal">
+  <div class="slides">
+%= content
+  </div>
+</div>
+<div style="position: absolute; top: 0; right: 0; z-index: 999;">
+%= link_to 'TOP' => url_for('/');
+</div>
+%= javascript '/reveal/lib/js/head.min.js'
+%= javascript '/reveal/js/reveal.min.js'
+<script>
+  Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    keyboard: true,
+    overview: true,
+    center: true,
+    loop: false,
+    autoSlide: 0,
+    mouseWheel: false,
+    rollingLinks: true,
+    theme: null,
+    transition: '<%= $transition %>',
+    dependencies: [
+      { src: '/reveal/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: '/reveal/plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: '/reveal/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: '/reveal/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+      { src: '/reveal/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: '/reveal/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+    ]
+  });
+</script>
+%= javascript '/gcp/prettify.js'
+%= javascript '/app/app.js'
+</body>
+</html>
