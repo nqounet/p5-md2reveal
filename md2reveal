@@ -6,9 +6,15 @@ use Path::Class qw(file dir);
 use Encode;
 use Text::Markdown qw(markdown);
 
+my $config = plugin 'Config';
+
+helper assets_dir => sub {
+  dir(app->config('assets_dir'));
+};
+
 get '/' => sub {
   my ($self) = @_;
-  my $dir = dir($self->app->home->detect, 'assets');
+  my $dir = $self->assets_dir;
   my @assets;
   for my $child ($dir->children) {
     my $basename = $child->basename || '';
@@ -25,7 +31,7 @@ get '/' => sub {
 
 get '/#filename' => sub {
   my ($self) = @_;
-  my $file = file($self->app->home->detect, 'assets', $self->param('filename'));
+  my $file = file($self->assets_dir, $self->param('filename'));
   return $self->render_not_found unless $file->stringify =~ /\.md\z/;
   return $self->render_not_found unless -f $file;
   my $conf_file = $file->stringify . '.conf';
@@ -97,7 +103,6 @@ __DATA__
   %= stylesheet '/reveal/css/reveal.min.css'
   %= stylesheet '/reveal/css/theme/'.$theme.'.css'
   %= stylesheet '/reveal/lib/css/zenburn.css'
-  %= stylesheet '/gcp/prettify.css'
   %= stylesheet '/app/app.css'
 </head>
 <body>
@@ -135,7 +140,6 @@ __DATA__
     ]
   });
 </script>
-%= javascript '/gcp/prettify.js'
 %= javascript '/app/app.js'
 </body>
 </html>
