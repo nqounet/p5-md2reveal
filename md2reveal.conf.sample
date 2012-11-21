@@ -1,3 +1,4 @@
 {
   assets_dir => 'assets',
+  static_dir => ['/var/www'],
 };

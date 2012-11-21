@@ -12,6 +12,8 @@ helper assets_dir => sub {
   dir(app->config('assets_dir'));
 };
 
+push @{app->static->paths}, @{app->config('static_dir') // []};
+
 get '/' => sub {
   my ($self) = @_;
   my $dir = $self->assets_dir;
