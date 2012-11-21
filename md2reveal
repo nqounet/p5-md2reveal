@@ -65,6 +65,7 @@ __DATA__
   % for my $file (@{$assets}) {
     %= t li => begin
       %= link_to $file->basename => url_for($file->basename);
+      %= link_to '(pdf)' => url_for($file->basename)->query('print-pdf' => 1);
     % end
   % }
 % end
@@ -102,10 +103,15 @@ __DATA__
 <head>
   <meta charset="<%= app->renderer->encoding %>" />
   <title><%= title %></title>
-  %= stylesheet '/reveal/css/reveal.min.css'
-  %= stylesheet '/reveal/css/theme/'.$theme.'.css'
-  %= stylesheet '/reveal/lib/css/zenburn.css'
-  %= stylesheet '/app/app.css'
+  %= stylesheet '/reveal/css/reveal.min.css', media => 'all'
+  %= stylesheet '/reveal/css/theme/'.$theme.'.css', media => 'all'
+  % if (defined $self->param('print-pdf')) {
+    %= stylesheet '/reveal/css/print/pdf.css', media => "print"
+  % } else {
+    %= stylesheet '/reveal/css/print/paper.css', media => "print"
+  % }
+  %= stylesheet '/reveal/lib/css/zenburn.css', media => 'all'
+  %= stylesheet '/app/app.css', media => 'all'
 </head>
 <body>
 <div id="md2reveal" class="reveal">
