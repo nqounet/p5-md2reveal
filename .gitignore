@@ -1,2 +1,4 @@
 *.md
 *.conf
+/var
+!README.md

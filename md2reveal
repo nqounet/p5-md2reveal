@@ -112,6 +112,7 @@ __DATA__
   % }
   %= stylesheet '/reveal/lib/css/zenburn.css', media => 'all'
   %= stylesheet '/app/app.css', media => 'all'
+  %= javascript '/reveal/lib/js/head.min.js'
 </head>
 <body>
 <div id="md2reveal" class="reveal">
@@ -122,8 +123,7 @@ __DATA__
 <div style="position: absolute; top: 0; right: 0; z-index: 999;">
 %= link_to 'TOP' => url_for('/');
 </div>
-%= javascript '/reveal/lib/js/head.min.js'
-%= javascript '/reveal/js/reveal.min.js'
+  %= javascript '/reveal/js/reveal.min.js'
 <script>
   Reveal.initialize({
     controls: true,
