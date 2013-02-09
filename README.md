@@ -2,9 +2,9 @@
 
 ## if you don't have `Mojolicious`
     curl -L http://cpanmin.us | perl - --self-upgrade
-    cpanm Mojolicious
+    cpanm Mojolicious Path::Class Text::Markdown
 
-## and run 
+## and run
     git clone git://github.com/nqounet/p5-md2reveal.git
     cd p5-md2reveal
     mv md2reveal.conf.sample md2reveal.conf
