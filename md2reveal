@@ -5,6 +5,7 @@ use Mojolicious::Lite;
 use Path::Class qw(file dir);
 use Encode;
 use Text::Markdown qw(markdown);
+use Time::Duration qw();
 
 my $config = plugin 'Config';
 
@@ -18,8 +19,8 @@ get '/' => sub {
   my ($self) = @_;
   my $dir = $self->assets_dir;
   my @assets;
-  for my $child ($dir->children) {
-    my $basename = $child->basename || '';
+  for my $child (sort {$b->stat->mtime <=> $a->stat->mtime} $dir->children) {
+    my $basename = $child->basename or next;
     next unless $basename =~ /\.md\z/;
     push @assets, $child;
   }
@@ -59,17 +60,24 @@ __DATA__
 
 @@ index/list.html.ep
 % layout 'default';
+% my @children;
+% while (@{$assets}) {
+  % push @children, [splice(@{$assets}, 0, 5)];
+% }
+% for my $child_assets (@children) {
 <section>
 <h1>Assets List</h1>
+<h2><%= Time::Duration::ago(time - $child_assets->[0]->stat->mtime, 1) %></h2>
 %= t ul => begin
-  % for my $file (@{$assets}) {
+  % for my $file (@{$child_assets}) {
     %= t li => begin
-      %= link_to $file->basename => url_for($file->basename);
+      %= link_to Encode::decode_utf8($file->basename) => url_for($file->basename);
       %= link_to '(pdf)' => url_for($file->basename)->query('print-pdf' => 1);
     % end
   % }
 % end
 </section>
+% }
 
 @@ index/single.html.ep
 % layout 'default';
