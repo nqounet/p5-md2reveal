@@ -21,18 +21,19 @@ unshift @{app->static->paths}, @{app->config('static_dir') // []};
 
 get '/' => sub {
   my ($self) = @_;
-  my $dir = $self->assets_dir;
-  my $regex = $self->assets_regex;
+  my $dir    = $self->assets_dir;
+  my $regex  = $self->assets_regex;
   my @assets;
-  for my $child (sort {$b->stat->mtime <=> $a->stat->mtime} $dir->children) {
+  for my $child (sort { $b->stat->mtime <=> $a->stat->mtime } $dir->children)
+  {
     my $basename = $child->basename or next;
     next unless $basename =~ $regex;
     push @assets, $child;
   }
   $self->stash(
-    assets => \@assets,
+    assets     => \@assets,
     transition => 'default',
-    theme => 'default',
+    theme      => 'default',
   );
   $self->render(template => 'index/list');
 };
@@ -43,18 +44,19 @@ get '/#filename' => sub {
   return $self->render_not_found unless $file->stringify =~ /\.md\z/;
   return $self->render_not_found unless -f $file;
   my $conf_file = $file->stringify . '.conf';
-  my $conf = do $conf_file||{};
+  my $conf      = do $conf_file || {};
   my $content   = decode_utf8($file->slurp);
   my @slide     = $content =~ /(^#\s+.*?)(?:(?=^#\s+)|\z)/msg;
   my @kids;
+
   for my $slide (@slide) {
-    @kids   = $slide =~ /(^##?\s+.*?)(?:(?=^##?\s+)|\z)/msg;
-    $slide  = [map {markdown($_)} @kids];
+    @kids = $slide =~ /(^##?\s+.*?)(?:(?=^##?\s+)|\z)/msg;
+    $slide = [map { markdown($_) } @kids];
   }
   $self->stash(
     stash_slide => \@slide,
-    transition => $conf->{transition}//'default',
-    theme => $conf->{theme}//'beige',
+    transition  => $conf->{transition} // 'default',
+    theme       => $conf->{theme} // 'beige',
   );
   return $self->render(template => 'index/single');
 };
