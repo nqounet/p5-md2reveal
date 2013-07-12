@@ -1,4 +1,4 @@
-{
-  assets_dir => 'assets',
-  static_dir => ['/var/www'],
+{ assets_regex => qr/\.md\z/ms,
+  assets_dir   => 'assets',
+  static_dir   => ['/var/www'],
 };

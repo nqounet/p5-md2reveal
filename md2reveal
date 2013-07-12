@@ -13,15 +13,20 @@ helper assets_dir => sub {
   dir(app->config('assets_dir'));
 };
 
+helper assets_regex => sub {
+  app->config('assets_regex') or qr/\.md\z/;
+};
+
 unshift @{app->static->paths}, @{app->config('static_dir') // []};
 
 get '/' => sub {
   my ($self) = @_;
   my $dir = $self->assets_dir;
+  my $regex = $self->assets_regex;
   my @assets;
   for my $child (sort {$b->stat->mtime <=> $a->stat->mtime} $dir->children) {
     my $basename = $child->basename or next;
-    next unless $basename =~ /\.md\z/;
+    next unless $basename =~ $regex;
     push @assets, $child;
   }
   $self->stash(
