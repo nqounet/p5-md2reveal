@@ -1,10 +1,9 @@
 #!/usr/bin/env perl
-use utf8;
 use Mojolicious::Lite;
 
 use Path::Class qw(file dir);
 use Encode;
-use Text::Markdown qw(markdown);
+use Text::Markdown::Discount qw(markdown);
 use Time::Duration qw();
 
 my $config = plugin 'Config';
